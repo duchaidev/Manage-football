@@ -79,6 +79,11 @@ const OderList = () => {
       ),
     },
     {
+      title: "Loại sân",
+      dataIndex: "type",
+      key: "type",
+    },
+    {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",

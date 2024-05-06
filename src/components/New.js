@@ -1,4 +1,4 @@
-import { collection, onSnapshot, query } from "firebase/firestore";
+import { collection, limit, onSnapshot, query } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase-app/firebase-auth";
 import { NavLink } from "react-router-dom";
@@ -12,7 +12,7 @@ const New = ({ data, title }) => {
     async function fetchSans() {
       setLoading(true);
       // const colRef = collection(db, "listsan");
-      const newRef = query(collection(db, "listsan"));
+      const newRef = query(collection(db, "listsan"), limit(4));
       onSnapshot(newRef, (snapshot) => {
         const result = [];
         snapshot.forEach((san) => {

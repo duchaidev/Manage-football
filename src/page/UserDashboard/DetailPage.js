@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from "react";
 import HeadingUser from "../../components/layout/HeadingUser";
 import Footer1 from "../../components/layout/Footer1";
-import { Button, Modal, QRCode, Spin, TimePicker, message } from "antd";
+import {
+  Button,
+  DatePicker,
+  Modal,
+  QRCode,
+  Spin,
+  TimePicker,
+  message,
+} from "antd";
 import {
   collection,
   limit,
@@ -24,13 +32,14 @@ const DetailPage = () => {
   const { id } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [date, setDate] = useState(dayjs().format("DD/MM/YYYY"));
+  const [groupedBookings, setGroupedBookings] = useState({});
   const showModal = () => {
     setIsModalOpen(true);
   };
 
   const handleOk = async () => {
-    await handleTimeSelect(value?.map((time) => dayjs(time).format("HH:mm A")));
+    await handleBook();
     setIsModalOpen(false);
   };
 
@@ -39,7 +48,6 @@ const DetailPage = () => {
   };
 
   const onChangeTime = (time) => {
-    console.log(time);
     setValue(time);
   };
 
@@ -74,11 +82,12 @@ const DetailPage = () => {
       if (!id) return;
 
       const today = dayjs().format("DD/MM/YYYY"); // Format ngày hôm nay
-
+      const tomorrow = dayjs().add(1, "day").format("DD/MM/YYYY"); // Ngày mai
+      const dayAfterTomorrow = dayjs().add(2, "day").format("DD/MM/YYYY"); // Ngày kia
       const colRef = query(
         collection(db, "san_booking"),
-        // where("id_san", "==", id),
-        where("date", "==", today) // Thêm điều kiện so sánh ngày với ngày hôm nay
+        where("date", "in", [today, tomorrow, dayAfterTomorrow]),
+        where("status", "==", "success")
       );
 
       onSnapshot(colRef, (snapshot) => {
@@ -99,7 +108,7 @@ const DetailPage = () => {
     fetchSans();
   }, [id]);
 
-  const handleTimeSelect = (time) => {
+  const handleTimeSelect = (time, date) => {
     const [startTime, endTime] = data.time;
     if (time[0] === time[1]) return message.error("Thời gian không hợp lệ");
     if (time?.length === 0) return message.error("Vui lòng chọn thời gian");
@@ -116,15 +125,16 @@ const DetailPage = () => {
     if (selectedStart.isBefore(dbStartTime) || selectedEnd.isAfter(dbEndTime)) {
       return message.error("Thời gian đã ngoài giờ mở cửa");
     } else {
+      console.log(listBooking);
       // Kiểm tra xem thời gian đã chọn có bị trùng lặp với các lịch đặt khác hay không
       const isTimeSet = listBooking.some((item) => {
         const [startTime, endTime] = item.time;
-
         // Chuyển đổi thời gian trong cơ sở dữ liệu sang định dạng dayjs
         const dbStartTime = dayjs(startTime, "HH:mm A");
         const dbEndTime = dayjs(endTime, "HH:mm A");
 
         // Kiểm tra xem thời gian đã chọn có chồng lấn với bất kỳ khoảng thời gian nào trong cơ sở dữ liệu hay không
+        if (item.date !== date?.format("DD/MM/YYYY")) return false;
         return (
           selectedStart.isBefore(dbEndTime) && selectedEnd.isAfter(dbStartTime)
         );
@@ -132,7 +142,7 @@ const DetailPage = () => {
       if (isTimeSet) {
         return message.error("Thời gian đã bị trùng lặp với lịch đặt khác");
       } else {
-        return handleBook();
+        showModal();
       }
     }
   };
@@ -143,7 +153,7 @@ const DetailPage = () => {
       await addDoc(colRef, {
         id_san: id,
         time: value?.map((time) => dayjs(time).format("HH:mm A")),
-        date: dayjs().format("DD/MM/YYYY"),
+        date: date ? date?.format("DD/MM/YYYY") : dayjs().format("DD/MM/YYYY"),
         name: data?.name,
         price: data?.price,
         emailOwner: data?.email || "",
@@ -153,6 +163,7 @@ const DetailPage = () => {
         phone: localStorageData?.phone || "",
         email: localStorageData?.email || "",
         status: "success",
+        type: data?.type || "",
       });
       message.success("Đặt sân thành công");
     } catch (e) {
@@ -160,6 +171,32 @@ const DetailPage = () => {
       message.error("Đặt sân thất bại");
     }
   };
+
+  useEffect(() => {
+    let bookingsForDate = {};
+    listBooking.forEach((booking) => {
+      const date = booking.date;
+      if (!bookingsForDate[date]) {
+        bookingsForDate[date] = [];
+      }
+      bookingsForDate[date].push(booking);
+    });
+
+    // Chuyển đổi đối tượng thành một mảng các cặp key-value
+    const sortedBookings = Object.entries(bookingsForDate);
+
+    // Sắp xếp mảng các cặp key-value theo ngày từ bé đến lớn
+    sortedBookings.sort((a, b) => {
+      const dateA = dayjs(a[0], "DD/MM/YYYY");
+      const dateB = dayjs(b[0], "DD/MM/YYYY");
+      return dateA - dateB;
+    });
+
+    // Chuyển đổi lại mảng đã sắp xếp thành đối tượng
+    const sortedBookingsObject = Object.fromEntries(sortedBookings);
+
+    setGroupedBookings(sortedBookingsObject);
+  }, [listBooking]);
 
   return (
     <div>
@@ -210,7 +247,7 @@ const DetailPage = () => {
             <div className="flex flex-col gap-y-3 ">
               <div>
                 <span className="mt-2 text-xl text-green-500 font-semibold">
-                  {data?.name}
+                  {data?.name} - Loại sân: {data?.type || "Không có"}
                 </span>
               </div>
               <p>
@@ -232,20 +269,41 @@ const DetailPage = () => {
               <div>
                 <span className="font-semibold">
                   <div>Thời gian đã có người thuê: </div>
-                  {listBooking?.length > 0 &&
-                    listBooking?.map((item, index) => {
+                  {listBooking?.length > 0 ? (
+                    Object.keys(groupedBookings).map((date) => {
+                      const bookingsForDate = groupedBookings[date];
                       return (
-                        <span className="text-red-500">
-                          <span className="whitespace-nowrap">
-                            {item.time[0]} - {item.time[1]}
-                          </span>
-                          <span className="text-black">
-                            {listBooking?.length - 1 !== index ? " / " : ""}
-                          </span>
-                        </span>
+                        <div key={date} className="text-sm mt-[6px]">
+                          <h3>Ngày: {date}</h3>
+                          {bookingsForDate.map((booking, index) => (
+                            <span key={index} className="text-red-500">
+                              <span className="whitespace-nowrap">
+                                {booking.time[0]} - {booking.time[1]}
+                              </span>
+                              <span className="text-black">
+                                {index !== bookingsForDate.length - 1
+                                  ? " / "
+                                  : ""}
+                              </span>
+                            </span>
+                          ))}
+                        </div>
                       );
-                    })}
+                    })
+                  ) : (
+                    <span className="text-green-500">Không có</span>
+                  )}
                 </span>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="font-semibold">Chọn ngày: </span>
+                <DatePicker
+                  defaultValue={dayjs()}
+                  minDate={dayjs()}
+                  maxDate={dayjs().add(2, "day")}
+                  format="DD/MM/YYYY"
+                  onChange={(date) => setDate(date)}
+                />
               </div>
               <div className="flex flex-col gap-2">
                 <span className="font-semibold">Chọn giờ: </span>
@@ -259,7 +317,11 @@ const DetailPage = () => {
                 className="bg-green-500 max-w-[100px] py-1 px-2 rounded-lg text-white font-sans text-lg hover:bg-green-400"
                 onClick={() => {
                   if (!value) return message.error("Vui lòng chọn thời gian");
-                  showModal();
+                  if (!date) return message.error("Vui lòng chọn ngày");
+                  handleTimeSelect(
+                    value?.map((time) => dayjs(time).format("HH:mm A")),
+                    date
+                  );
                 }}
               >
                 Đặt ngay

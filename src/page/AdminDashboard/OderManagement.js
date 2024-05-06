@@ -69,8 +69,14 @@ const OderManagement = () => {
     {
       title: "Ngày thuê",
       dataIndex: "date",
-      key: "date ",
+      key: "date",
     },
+    {
+      title: "Loại sân",
+      dataIndex: "type",
+      key: "type",
+    },
+
     {
       title: "Giờ thuê",
       dataIndex: "time",

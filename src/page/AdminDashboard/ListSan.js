@@ -12,6 +12,7 @@ import {
   message,
   Upload,
   Popconfirm,
+  Radio,
 } from "antd";
 
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
@@ -138,9 +139,15 @@ const ListSan = () => {
       key: "address ",
     },
     {
+      title: "Loại sân",
+      dataIndex: "type",
+      key: "type",
+      align: "center",
+    },
+    {
       title: "Giá",
       dataIndex: "price",
-      key: "price ",
+      key: "price",
     },
     {
       title: "Diện tích",
@@ -241,6 +248,7 @@ const ListSan = () => {
           slug: slugify(values.name, {
             lower: true,
           }),
+          type: values.type ? values.type : 7,
         });
         message.success("Tạo mới sân thành công");
       }
@@ -342,6 +350,14 @@ const ListSan = () => {
                   </Form.Item>
                   <Form.Item label="Mô tả" name="description">
                     <TextArea />
+                  </Form.Item>
+                </div>
+                <div className="flex flex-col gap-1 my-4">
+                  <Form.Item label="Loại sân" name="type">
+                    <Radio.Group defaultValue={7}>
+                      <Radio value={7}>Sân 7</Radio>
+                      <Radio value={11}>Sân 11</Radio>
+                    </Radio.Group>
                   </Form.Item>
                 </div>
                 <input
