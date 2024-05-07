@@ -87,7 +87,8 @@ const DetailPage = () => {
       const colRef = query(
         collection(db, "san_booking"),
         where("date", "in", [today, tomorrow, dayAfterTomorrow]),
-        where("status", "==", "success")
+        where("status", "==", "success"),
+        where("id_san", "==", id)
       );
 
       onSnapshot(colRef, (snapshot) => {
