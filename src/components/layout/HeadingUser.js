@@ -59,30 +59,39 @@ const HeadingUser = () => {
             </NavLink>
           )}
         </div>
-        <div className="h-full flex items-center">
-          <span className="pr-4 text-green-600 text-xl font-semibold">
-            Xin chào, {localStorageData?.name || "Khách"}
-          </span>
-          <div>
-            {/* <img
+        {localStorageData?.name ? (
+          <div className="h-full flex items-center">
+            <span className="pr-4 text-green-600 text-xl font-semibold">
+              Xin chào, {localStorageData?.name || "Khách"}
+            </span>
+            <div>
+              {/* <img
               className="object-cover h-[40px] w-[40px] rounded-full"
               src="/avatar.jpg"
               alt=""
             /> */}
-            <Dropdown menu={{ items }}>
-              <a onClick={(e) => e.preventDefault()} className="cursor-pointer">
-                <Space>
-                  <img
-                    className="object-cover  h-[40px] w-[40px] rounded-full"
-                    src="/avtdf.png"
-                    alt=""
-                  />
-                  {/* <DownOutlined /> */}
-                </Space>
-              </a>
-            </Dropdown>
+              <Dropdown menu={{ items }}>
+                <a
+                  onClick={(e) => e.preventDefault()}
+                  className="cursor-pointer"
+                >
+                  <Space>
+                    <img
+                      className="object-cover  h-[40px] w-[40px] rounded-full"
+                      src="/avtdf.png"
+                      alt=""
+                    />
+                    {/* <DownOutlined /> */}
+                  </Space>
+                </a>
+              </Dropdown>
+            </div>
           </div>
-        </div>
+        ) : (
+          <button className="px-3 py-2 bg-green-800 text-white rounded-xl">
+            <NavLink to={"/log-in"}>Đăng nhập</NavLink>
+          </button>
+        )}
       </div>
     </div>
   );

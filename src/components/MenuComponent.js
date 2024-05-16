@@ -27,6 +27,8 @@ const MenuComponent = () => {
     if (localStorageData?.role === "user") {
       message.error("Bạn không có quyền truy cập vào trang này");
       navigate("/");
+    } else if (!localStorageData?.name) {
+      navigate("/404");
     } else {
       setDataUser(localStorageData);
     }

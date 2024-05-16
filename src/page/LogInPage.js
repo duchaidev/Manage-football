@@ -48,10 +48,10 @@ const LogInPage = () => {
           console.log("No such user document!");
         }
       });
-      message.success("Successfully!!!");
+      message.success("Đăng nhập thành công");
       navigate("/");
     } catch (error) {
-      message.error("It seems your password was wrong");
+      message.error("Sai tài khoản hoặc mật khẩu");
     }
     setLoading(false);
   };

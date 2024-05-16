@@ -32,7 +32,7 @@ const DetailPage = () => {
   const { id } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [date, setDate] = useState(dayjs().format("DD/MM/YYYY"));
+  const [date, setDate] = useState(null);
   const [groupedBookings, setGroupedBookings] = useState({});
   const showModal = () => {
     setIsModalOpen(true);
@@ -77,8 +77,9 @@ const DetailPage = () => {
     }
     fetchSans();
   }, [id]);
+
   useEffect(() => {
-    async function fetchSans() {
+    async function fetchSanstime() {
       if (!id) return;
 
       const today = dayjs().format("DD/MM/YYYY"); // Format ngày hôm nay
@@ -105,8 +106,7 @@ const DetailPage = () => {
         setListBooking(sortedData);
       });
     }
-
-    fetchSans();
+    fetchSanstime();
   }, [id]);
 
   const handleTimeSelect = (time, date) => {
@@ -126,7 +126,6 @@ const DetailPage = () => {
     if (selectedStart.isBefore(dbStartTime) || selectedEnd.isAfter(dbEndTime)) {
       return message.error("Thời gian đã ngoài giờ mở cửa");
     } else {
-      console.log(listBooking);
       // Kiểm tra xem thời gian đã chọn có bị trùng lặp với các lịch đặt khác hay không
       const isTimeSet = listBooking.some((item) => {
         const [startTime, endTime] = item.time;
@@ -318,7 +317,6 @@ const DetailPage = () => {
                 className="bg-green-500 max-w-[100px] py-1 px-2 rounded-lg text-white font-sans text-lg hover:bg-green-400"
                 onClick={() => {
                   if (!value) return message.error("Vui lòng chọn thời gian");
-                  if (!date) return message.error("Vui lòng chọn ngày");
                   handleTimeSelect(
                     value?.map((time) => dayjs(time).format("HH:mm A")),
                     date

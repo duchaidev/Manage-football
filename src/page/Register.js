@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Spin, message } from "antd";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
@@ -12,6 +12,7 @@ const Register = () => {
     password: "",
     rePassword: "",
   });
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const handleChange = (e) => {
     setValueForm({
@@ -52,6 +53,7 @@ const Register = () => {
         avatardf: "/avtdf.png",
         role: "user",
       });
+      navigate("/log-in");
       message.success("Successfully!!!");
     } catch (error) {
       message.error("Email đã tồn tại");
