@@ -300,7 +300,11 @@ const DetailPage = () => {
                 <DatePicker
                   defaultValue={dayjs()}
                   minDate={dayjs()}
-                  maxDate={dayjs().add(2, "day")}
+                  maxDate={
+                    data?.timeOff
+                      ? data?.timeOff[1]?.format("DD/MM/YYYY")
+                      : dayjs().add(2, "day")
+                  }
                   format="DD/MM/YYYY"
                   onChange={(date) => setDate(date)}
                 />

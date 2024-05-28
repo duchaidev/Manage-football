@@ -15,7 +15,7 @@ const New = ({ data, title }) => {
     const endDate = dayjs(timeOff[1], "DD/MM/YYYY");
 
     // Ngày hiện tại
-    const today = dayjs().add(3, "day");
+    const today = dayjs().add(1, "day");
 
     // Kiểm tra xem ngày hôm nay có nằm trong khoảng thời gian hay không
     const isTodayInRange =
