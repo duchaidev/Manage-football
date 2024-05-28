@@ -10,17 +10,20 @@ import {
   TimePicker,
   Spin,
   message,
-  Upload,
   Popconfirm,
   Radio,
+  DatePicker,
 } from "antd";
 
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  PoweroffOutlined,
+} from "@ant-design/icons";
 import {
   getDownloadURL,
   getStorage,
   ref,
-  uploadBytes,
   uploadBytesResumable,
 } from "firebase/storage";
 import {
@@ -36,7 +39,11 @@ import {
 import dayjs from "dayjs";
 import { db } from "../../firebase-app/firebase-auth";
 import slugify from "slugify";
+import TurnOffIccon from "../../components/icon/TurnOffIccon";
+import TurnOnIcon from "../../components/icon/TurnOnIcon";
 const { TextArea } = Input;
+
+const { RangePicker } = DatePicker;
 
 const ListSan = () => {
   // const [file, setFile] = useState(null);
@@ -44,10 +51,28 @@ const ListSan = () => {
   const [localStorageData, setLocalStorageData] = useState(null);
   const [dataSource, setDataSource] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen1, setIsModalOpen1] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
   const [editData, setEditData] = useState();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [date, setDate] = useState(null);
+  const [dataEditTime, setDataEditTime] = useState([]);
+
+  const handleCheckDate = (timeOff) => {
+    if (!timeOff) return false;
+    const startDate = dayjs(timeOff[0], "DD/MM/YYYY");
+    const endDate = dayjs(timeOff[1], "DD/MM/YYYY");
+
+    // Ngày hiện tại
+    const today = dayjs().add(3, "day");
+
+    // Kiểm tra xem ngày hôm nay có nằm trong khoảng thời gian hay không
+    const isTodayInRange =
+      today.isAfter(startDate.subtract(1, "day")) &&
+      today.isBefore(endDate.add(1, "day"));
+    return isTodayInRange;
+  };
 
   function handleChange(e) {
     // if (e.target.files[0]) setFile(e.target.files[0]);
@@ -167,6 +192,47 @@ const ListSan = () => {
       title: "Thao tác",
       render: (_, record) => (
         <Space size="middle">
+          {handleCheckDate(record?.timeOff) ? (
+            <Popconfirm
+              title="Bật sân"
+              description="Bạn có chắc chắn muốn bật?"
+              onConfirm={async () => {
+                const colRef = doc(db, "listsan", record.id);
+                await updateDoc(colRef, {
+                  ...record,
+                  timeOff: null,
+                });
+                message.success("Bật sân thành công");
+              }}
+              className="cursor-pointer"
+              okText="Yes"
+              cancelText="No"
+            >
+              <p>
+                <TurnOnIcon />
+              </p>
+            </Popconfirm>
+          ) : (
+            <p
+              className="cursor-pointer"
+              onClick={() => {
+                setDataEditTime({
+                  id: record.id,
+                  name: record.name,
+                  address: record.address,
+                  acr: record.acr,
+                  time: record.time,
+                  price: record.price,
+                  description: record.description,
+                  image: record.image,
+                });
+                setEditData(record?.id);
+                setIsModalOpen1(true);
+              }}
+            >
+              <TurnOffIccon />
+            </p>
+          )}
           <button
             onClick={() => {
               form.setFieldsValue({
@@ -234,6 +300,7 @@ const ListSan = () => {
           slug: slugify(values.name, {
             lower: true,
           }),
+          type: values.type ? values.type : 7,
         });
         message.success("Cập nhật sân thành công");
       } else {
@@ -257,12 +324,11 @@ const ListSan = () => {
       setURL("");
     } catch (e) {
       console.log(e);
-      message.error("Tạo mới sân thất bại");
+      message.error("Thất bại");
     }
     setLoading(false);
   };
 
-  console.log(loading);
   return (
     <div className="flex flex-col w-full">
       <div className="flex flex-col bg-gray-100 h-[calc(100vh-60px)] w-full p-5">
@@ -382,6 +448,55 @@ const ListSan = () => {
           </Spin>
         </Modal>
       </div>
+      <Modal
+        title="Đóng sân"
+        open={isModalOpen1}
+        onCancel={() => {
+          setIsModalOpen1(false);
+        }}
+        width={800}
+        footer={[
+          <Button
+            key="back"
+            onClick={() => {
+              setIsModalOpen1(false);
+            }}
+          >
+            ĐÓNG
+          </Button>,
+          <Button
+            type="primary"
+            loading={loading}
+            onClick={async () => {
+              try {
+                const colRef = doc(db, "listsan", editData);
+                await updateDoc(colRef, {
+                  ...dataEditTime,
+                  timeOff: date,
+                });
+                message.success("Tắt sân thành công");
+                setIsModalOpen1(false);
+              } catch (e) {
+                console.log(e);
+              }
+            }}
+          >
+            LƯU
+          </Button>,
+        ]}
+      >
+        <div className="flex flex-col gap-2">
+          <span className="font-semibold">Chọn ngày: </span>
+          <RangePicker
+            defaultValue={dayjs().add(3, "day")}
+            minDate={dayjs().add(3, "day")}
+            format="DD/MM/YYYY"
+            onChange={(date) => {
+              setDate(date?.map((item) => item.format("DD/MM/YYYY")));
+            }}
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

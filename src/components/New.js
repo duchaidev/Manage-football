@@ -3,10 +3,26 @@ import React, { useEffect, useState } from "react";
 import { db } from "../firebase-app/firebase-auth";
 import { NavLink } from "react-router-dom";
 import { Spin } from "antd";
+import dayjs from "dayjs";
 
 const New = ({ data, title }) => {
   const [dataSource, setDataSource] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const handleCheckDate = (timeOff) => {
+    if (!timeOff) return false;
+    const startDate = dayjs(timeOff[0], "DD/MM/YYYY");
+    const endDate = dayjs(timeOff[1], "DD/MM/YYYY");
+
+    // Ngày hiện tại
+    const today = dayjs().add(3, "day");
+
+    // Kiểm tra xem ngày hôm nay có nằm trong khoảng thời gian hay không
+    const isTodayInRange =
+      today.isAfter(startDate.subtract(1, "day")) &&
+      today.isBefore(endDate.add(1, "day"));
+    return isTodayInRange;
+  };
 
   useEffect(() => {
     async function fetchSans() {
@@ -21,8 +37,9 @@ const New = ({ data, title }) => {
             ...san.data(),
           });
         });
-        setDataSource(result);
-        console.log(result);
+        setDataSource(
+          result?.filter((item) => !handleCheckDate(item?.timeOff))
+        );
       });
       setLoading(false);
     }

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { db } from "../../firebase-app/firebase-auth";
 import { NavLink } from "react-router-dom";
 import { Input, Select } from "antd";
+import dayjs from "dayjs";
 const { Search } = Input;
 
 const AllPitch = () => {
@@ -10,7 +11,20 @@ const AllPitch = () => {
   const [dataSearch, setDataSearch] = useState([]);
   const [type, setType] = useState("");
   const [search, setSearch] = useState("");
+  const handleCheckDate = (timeOff) => {
+    if (!timeOff) return false;
+    const startDate = dayjs(timeOff[0], "DD/MM/YYYY");
+    const endDate = dayjs(timeOff[1], "DD/MM/YYYY");
 
+    // Ngày hiện tại
+    const today = dayjs().add(3, "day");
+
+    // Kiểm tra xem ngày hôm nay có nằm trong khoảng thời gian hay không
+    const isTodayInRange =
+      today.isAfter(startDate.subtract(1, "day")) &&
+      today.isBefore(endDate.add(1, "day"));
+    return isTodayInRange;
+  };
   const onSearch = (value, _e, info) => setSearch(value);
   const handleChange = (value) => {
     setType(value);
@@ -44,7 +58,7 @@ const AllPitch = () => {
           ...san.data(),
         });
       });
-      setDataSource(result);
+      setDataSource(result?.filter((item) => !handleCheckDate(item?.timeOff)));
     });
   }
 

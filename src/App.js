@@ -10,7 +10,7 @@ import Pitch from "./page/UserDashboard/Pitch";
 import DetailPage from "./page/UserDashboard/DetailPage";
 import PricePage from "./page/UserDashboard/PricePage";
 import Infomation from "./page/UserDashboard/Infomation";
-import { ConfigProvider } from "antd";
+import { Button, ConfigProvider, Modal } from "antd";
 
 // import LogInPage from "./page/LogInPage";
 // import ListSan from "./page/AdminDashboard/ListSan";
@@ -20,6 +20,7 @@ import ListSan from "./page/AdminDashboard/ListSan";
 import OderManagement from "./page/AdminDashboard/OderManagement";
 import OwnerManagement from "./page/AdminDashboard/OwnerManagement";
 import RevenueManagement from "./page/AdminDashboard/RevenueManagement";
+import { useEffect, useState } from "react";
 
 const theme = {
   token: {
@@ -31,9 +32,45 @@ const theme = {
 };
 
 function App() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    // Kiểm tra sessionStorage để xem popup đã được hiển thị trong phiên hiện tại hay chưa
+    const hasSeenPopup = sessionStorage.getItem("hasSeenPopup");
+
+    if (!hasSeenPopup) {
+      setIsModalOpen(true);
+    }
+  }, []);
+
+  const handleClosePopup = () => {
+    // Đóng popup và lưu trạng thái vào sessionStorage
+    setIsModalOpen(false);
+    sessionStorage.setItem("hasSeenPopup", "true");
+  };
+
   return (
     <BrowserRouter>
       <ConfigProvider theme={theme}>
+        <Modal
+          title="Quy tắc đặt sân"
+          open={isModalOpen}
+          onOk={handleClosePopup}
+          onCancel={handleClosePopup}
+          footer={[<Button onClick={handleClosePopup}>Đóng</Button>]}
+        >
+          <p>
+            Bạn cần tạo tài khoản để có thể đặt sân. Chọn sân, thời gian bắt đầu
+            và thời gian kết thúc mong muốn. Bạn sẽ thanh toán và đợi thông báo
+            sớm nhất từ chủ sân.{" "}
+            <p className="font-semibold mt-2"> Quy tắc Hủy đặt sân:</p> Có thể
+            hủy sân trước thời gian đã đặt. Thời hạn có thể hủy sân là{" "}
+            <span className="text-red-500">3 ngày </span>
+            trước khi lịch đặt. Khi hủy{" "}
+            <span className="text-red-500">khách hàng sẽ chịu phí</span> hủy
+            sân.
+          </p>
+        </Modal>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<About />} />
