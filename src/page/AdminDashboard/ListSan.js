@@ -81,15 +81,20 @@ const ListSan = () => {
     }
   }
 
+  console.log(localStorageData);
   useEffect(() => {
     if (localStorageData) {
       async function fetchSans() {
-        // const colRef = collection(db, "listsan");
-        const newRef = query(
-          collection(db, "listsan"),
-          localStorageData?.id !== "staff" &&
-            where("userId", "==", String(localStorageData.id))
-        );
+        let newRef;
+        if (localStorageData?.role === "admin") {
+          newRef = collection(db, "listsan");
+        } else {
+          newRef = query(
+            collection(db, "listsan"),
+            localStorageData?.id !== "staff" &&
+              where("userId", "==", String(localStorageData.id))
+          );
+        }
         onSnapshot(newRef, (snapshot) => {
           const result = [];
           snapshot.forEach((san) => {
