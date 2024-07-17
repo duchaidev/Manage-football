@@ -19,15 +19,26 @@ const OderManagement = () => {
     setLocalStorageData(localStorageData);
   }, []);
 
+  // console.log(localStorageData);
+
   useEffect(() => {
     if (localStorageData) {
       async function fetchSans() {
-        // const colRef = collection(db, "listsan");
-        const newRef = query(
-          collection(db, "san_booking"),
-          localStorageData?.id !== "staff" &&
+        // Khởi tạo tham chiếu cơ bản đến collection
+        const colRef = collection(db, "san_booking");
+
+        // Áp dụng điều kiện where nếu role là 'staff'
+        let newRef;
+        if (localStorageData.role === "staff") {
+          newRef = query(
+            colRef,
             where("userIdOwner", "==", String(localStorageData.id))
-        );
+          );
+        } else {
+          newRef = colRef; // Lấy tất cả dữ liệu nếu role không phải là 'staff'
+        }
+
+        // Lắng nghe sự thay đổi dữ liệu từ Firestore
         onSnapshot(newRef, (snapshot) => {
           const result = [];
           snapshot.forEach((san) => {
@@ -39,6 +50,7 @@ const OderManagement = () => {
           setDataSource(result);
         });
       }
+
       fetchSans();
     }
   }, [localStorageData]);
